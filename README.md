@@ -1,5 +1,8 @@
 # memrig
 
+[![npm version](https://img.shields.io/npm/v/memrig.svg)](https://www.npmjs.com/package/memrig)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 SQLite memory brain for AI coding assistants. Per-user + shared team memory, hybrid search, zero config.
 
 ## What It Does
@@ -16,6 +19,12 @@ your-project/
 │       └── bob.db         ← Bob's memories (gitignored)
 ```
 
+## Install
+
+```bash
+npm install memrig
+```
+
 ## Quick Start
 
 ```bash
@@ -23,6 +32,30 @@ your-project/
 npx memrig init
 
 # That's it. Restart Claude Code and memrig is connected.
+```
+
+`memrig init` does the following:
+1. Creates `.memory/` directory with `shared.db` and `users/{you}.db`
+2. Adds `.memory/users/` to `.gitignore` (personal memories stay private)
+3. Creates `.mcp.json` with the memrig server config
+
+### Manual Setup
+
+If you prefer to configure manually, add this to your `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "memrig": {
+      "command": "npx",
+      "args": ["-y", "memrig"],
+      "env": {
+        "MEMORY_DIR": ".memory",
+        "MEMRIG_USER": "${USER}"
+      }
+    }
+  }
+}
 ```
 
 ## MCP Tools
@@ -49,11 +82,13 @@ npx memrig init
 
 `recall` uses hybrid retrieval:
 
-1. **FTS5 BM25** — keyword matching
+1. **FTS5 BM25** — keyword matching across content and tags
 2. **sqlite-vec** — semantic similarity (MiniLM-L6-v2 embeddings, runs locally)
-3. **Reciprocal Rank Fusion** — merges both ranked lists
-4. **Ebbinghaus decay** — older, less-accessed memories rank lower
-5. **Cross-DB merge** — personal results weighted slightly higher than shared
+3. **Reciprocal Rank Fusion** — merges both ranked lists with `score = Σ 1/(k + rank)`
+4. **Ebbinghaus decay** — older, less-accessed memories rank lower (decay rate varies by type)
+5. **Cross-DB merge** — personal results weighted 1.1x higher than shared
+
+Memories below 5% strength are auto-pruned during recall.
 
 ## Configuration
 
@@ -69,6 +104,17 @@ Environment variables (set in `.mcp.json`):
 1. One person runs `npx memrig init` and commits `.mcp.json` + `.memory/shared.db`
 2. Everyone else pulls and runs `npx memrig init` (idempotent — won't overwrite existing config)
 3. Shared memories sync via git. Personal memories stay local.
+4. Use the `share` tool to promote personal memories to the team, `import_memory` to pull shared memories into your personal space.
+
+## Development
+
+```bash
+git clone https://github.com/RiggdAI/memrig.git
+cd memrig
+npm install
+npm test        # run tests (vitest)
+npm run build   # compile with tsup
+```
 
 ## License
 
