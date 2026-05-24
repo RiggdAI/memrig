@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { SCHEMA_SQL, VEC_SCHEMA_SQL, MEMORY_TYPES, RELATION_TYPES } from "../src/schema.js";
+import { openDatabase } from "../src/db.js";
 
 describe("schema", () => {
   it("exports schema SQL as a non-empty string", () => {
@@ -43,5 +47,72 @@ describe("schema", () => {
     expect(RELATION_TYPES).toContain("supersedes");
     expect(RELATION_TYPES).toContain("contradicts");
     expect(RELATION_TYPES.length).toBe(3);
+  });
+});
+
+describe("openDatabase", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "memrig-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("creates a new database with the schema applied", () => {
+    const dbPath = join(tempDir, "test.db");
+    const db = openDatabase(dbPath);
+
+    const tables = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+      .all() as { name: string }[];
+    const tableNames = tables.map((t) => t.name);
+
+    expect(tableNames).toContain("memories");
+    expect(tableNames).toContain("relations");
+
+    db.close();
+  });
+
+  it("sets WAL journal mode", () => {
+    const dbPath = join(tempDir, "test.db");
+    const db = openDatabase(dbPath);
+
+    const result = db.pragma("journal_mode") as { journal_mode: string }[];
+    expect(result[0].journal_mode).toBe("wal");
+
+    db.close();
+  });
+
+  it("creates parent directories if they do not exist", () => {
+    const dbPath = join(tempDir, "nested", "deep", "test.db");
+    const db = openDatabase(dbPath);
+
+    const tables = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+      .all() as { name: string }[];
+    expect(tables.length).toBeGreaterThan(0);
+
+    db.close();
+  });
+
+  it("reopens an existing database without error", () => {
+    const dbPath = join(tempDir, "test.db");
+    const db1 = openDatabase(dbPath);
+    db1
+      .prepare(
+        "INSERT INTO memories (id, type, content, source_user) VALUES (?, ?, ?, ?)",
+      )
+      .run("test-1", "decision", "test content", "testuser");
+    db1.close();
+
+    const db2 = openDatabase(dbPath);
+    const row = db2
+      .prepare("SELECT content FROM memories WHERE id = ?")
+      .get("test-1") as { content: string };
+    expect(row.content).toBe("test content");
+    db2.close();
   });
 });
