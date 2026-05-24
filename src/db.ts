@@ -1,18 +1,24 @@
 import Database from "better-sqlite3";
 import { createRequire } from "node:module";
 import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { SCHEMA_SQL, VEC_SCHEMA_SQL } from "./schema.js";
 
-const require = createRequire(import.meta.url);
+let cachedVecPath: string | null | undefined;
 
 function getVecExtensionPath(): string | null {
+  if (cachedVecPath !== undefined) return cachedVecPath;
   try {
-    const sqliteVec = require("sqlite-vec");
-    return sqliteVec.getLoadablePath();
+    const _require =
+      typeof require !== "undefined"
+        ? require
+        : createRequire(import.meta.url || join(process.cwd(), "__synthetic.mjs"));
+    const sqliteVec = _require("sqlite-vec");
+    cachedVecPath = sqliteVec.getLoadablePath();
   } catch {
-    return null;
+    cachedVecPath = null;
   }
+  return cachedVecPath;
 }
 
 export function openDatabase(dbPath: string): Database.Database {

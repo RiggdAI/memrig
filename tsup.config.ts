@@ -10,6 +10,4 @@ export default defineConfig({
   banner: {
     js: "#!/usr/bin/env node",
   },
-  noExternal: [/(.*)/],
-  external: ["better-sqlite3", "sqlite-vec"],
 });

@@ -15,7 +15,14 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["mcp", "memory", "sqlite", "ai", "claude", "coding-assistant"],
+  "keywords": [
+    "mcp",
+    "memory",
+    "sqlite",
+    "ai",
+    "claude",
+    "coding-assistant"
+  ],
   "author": "RiggdAI",
   "license": "MIT",
   "repository": {
@@ -26,6 +33,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "better-sqlite3": "^12.10.0",
     "nanoid": "^5.1.11",
