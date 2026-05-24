@@ -1,0 +1,41 @@
+{
+  "name": "memrig",
+  "version": "0.1.0",
+  "description": "SQLite memory brain for AI coding assistants — per-user + shared memory via MCP",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "bin": {
+    "memrig": "dist/index.cjs"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["mcp", "memory", "sqlite", "ai", "claude", "coding-assistant"],
+  "author": "RiggdAI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RiggdAI/memrig.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "better-sqlite3": "^12.10.0",
+    "nanoid": "^5.1.11",
+    "sqlite-vec": "^0.1.9"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.0.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.1"
+  }
+}
