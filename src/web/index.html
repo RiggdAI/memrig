@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>memrig — live memory graph</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0b0e14; color: #c9d1d9; font: 13px/1.4 ui-sans-serif, system-ui, sans-serif; overflow: hidden; }
+    #graph { position: fixed; inset: 0; }
+    #bar { position: fixed; top: 0; left: 0; right: 0; display: flex; gap: 10px; align-items: center;
+           padding: 8px 12px; background: linear-gradient(#0b0e14ee, #0b0e1400); z-index: 10; }
+    #bar input[type=search] { background: #161b22; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px; padding: 5px 9px; width: 220px; }
+    .toggle { display: flex; align-items: center; gap: 4px; opacity: .85; cursor: pointer; user-select: none; }
+    #panel { position: fixed; top: 48px; right: 12px; width: 300px; max-height: 80vh; overflow: auto;
+             background: #161b22ee; border: 1px solid #30363d; border-radius: 10px; padding: 14px; display: none; z-index: 10; }
+    #panel h3 { margin: 0 0 6px; font-size: 14px; }
+    #panel .meta { color: #8b949e; font-size: 12px; margin: 8px 0; }
+    #panel button { background: #b62324; border: 0; color: #fff; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+    .legend { display: flex; gap: 10px; margin-left: auto; opacity: .8; }
+    .legend span { display: flex; align-items: center; gap: 4px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    #empty { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #8b949e; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="graph"></div>
+  <div id="empty">No memories yet — they'll appear here as the assistant remembers things.</div>
+  <div id="bar">
+    <strong>memrig</strong>
+    <input id="search" type="search" placeholder="search memories…" />
+    <label class="toggle"><input type="checkbox" id="t-relation" checked /> links</label>
+    <label class="toggle"><input type="checkbox" id="t-similarity" checked /> similar</label>
+    <label class="toggle"><input type="checkbox" id="t-tag" checked /> tags</label>
+    <span class="legend" id="legend"></span>
+  </div>
+  <div id="panel"></div>
+  <script src="./vendor/force-graph.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
