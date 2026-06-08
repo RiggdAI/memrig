@@ -19,11 +19,22 @@ const MIME: Record<string, string> = {
 
 // dist/web sits next to the bundled server at runtime; src/web during ts tests.
 function webRoot(): string {
-  const here = dirname(fileURLToPath(import.meta.url));
-  for (const candidate of [join(here, "..", "web"), join(here, "..", "..", "src", "web")]) {
+  // import.meta.url is undefined in CJS bundles; fall back to __dirname (injected by bundler).
+  const here = import.meta.url
+    ? dirname(fileURLToPath(import.meta.url))
+    : typeof __dirname !== "undefined"
+      ? __dirname
+      : process.cwd();
+  // Candidates cover: bundled (here=dist → dist/web), unbundled (here=dist/graph → dist/web),
+  // and ts-test (here=src/graph → src/web).
+  for (const candidate of [
+    join(here, "web"),
+    join(here, "..", "web"),
+    join(here, "..", "..", "src", "web"),
+  ]) {
     if (existsSync(candidate)) return candidate;
   }
-  return join(here, "..", "web");
+  return join(here, "web");
 }
 
 function readBody(req: IncomingMessage): Promise<string> {
