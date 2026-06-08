@@ -1,4 +1,5 @@
 import { defineConfig } from "tsup";
+import { cpSync } from "node:fs";
 
 export default defineConfig({
   entry: ["src/index.ts"],
@@ -10,4 +11,5 @@ export default defineConfig({
   banner: {
     js: "#!/usr/bin/env node",
   },
+  onSuccess: async () => { cpSync("src/web", "dist/web", { recursive: true }); },
 });

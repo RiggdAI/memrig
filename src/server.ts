@@ -8,6 +8,7 @@ import { executeForget } from "./tools/forget.js";
 import { executeShare } from "./tools/share.js";
 import { executeImport } from "./tools/import.js";
 import { executeList } from "./tools/list.js";
+import { executeLink } from "./tools/link.js";
 import { generateEmbedding } from "./embeddings.js";
 import { MEMORY_TYPES } from "./schema.js";
 
@@ -244,6 +245,33 @@ export async function startServer(memoryDir: string, user: string) {
         .join("\n\n");
 
       return { content: [{ type: "text" as const, text: formatted }] };
+    },
+  );
+
+  server.tool(
+    "link",
+    "Create a relationship between two memories (related, supersedes, or contradicts). Use after remember/recall to build the memory graph.",
+    {
+      source_id: z.string().describe("ID of the source memory"),
+      target_id: z.string().describe("ID of the target memory"),
+      relation_type: z
+        .enum(["related", "supersedes", "contradicts"])
+        .describe("How source relates to target"),
+      scope: z
+        .enum(["personal", "shared"])
+        .optional()
+        .describe("Which store the memories live in (default personal)"),
+    },
+    async (input) => {
+      const result = executeLink(personal, shared, input);
+      if (!result.success) {
+        return { content: [{ type: "text" as const, text: `Error: ${result.error}` }], isError: true };
+      }
+      return {
+        content: [
+          { type: "text" as const, text: `Linked: ${input.source_id} --${input.relation_type}--> ${input.target_id}` },
+        ],
+      };
     },
   );
 

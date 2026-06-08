@@ -68,6 +68,36 @@ If you prefer to configure manually, add this to your `.mcp.json`:
 | `share` | Promote a personal memory to shared team memory |
 | `import_memory` | Copy a shared memory to your personal space |
 | `list_memories` | Browse memories with filters |
+| `link` | Create an explicit relation between two memories (`related`, `supersedes`, or `contradicts`) |
+
+## Live Graph
+
+```bash
+npx memrig graph
+```
+
+Opens `http://127.0.0.1:4319` in your browser — a live, force-directed graph of your memories.
+
+**Flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--port <n>` | Use a different port (default: `4319`) |
+| `--no-open` | Start the server without opening a browser tab |
+| `--user <name>` | View a specific user's memory (defaults to `MEMRIG_USER`) |
+
+Respects the `MEMORY_DIR` environment variable.
+
+**What you see:**
+
+- **Nodes** — each memory; color-coded by type, size reflects importance, faded when Ebbinghaus strength is low
+- **Edges** — three kinds, each togglable in the top bar:
+  - Explicit links (red = `contradicts`, arrow = `supersedes`, plain = `related`) — created by the `link` tool
+  - Dotted lines — semantic similarity derived from sqlite-vec embeddings
+  - Faint lines — shared tags
+- **Search** — highlights matching nodes
+- **Click a node** — opens a side panel with full content and a Forget button
+- **Live updates** — the graph refreshes via SSE as the assistant remembers, recalls, or links
 
 ## Memory Types
 
