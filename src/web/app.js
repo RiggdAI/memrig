@@ -12,6 +12,7 @@ const Graph = ForceGraph()(el("graph"))
   .backgroundColor("#0b0e14")
   .nodeId("id")
   .nodeRelSize(4)
+  .nodeLabel((n) => `<div style="max-width:240px;padding:2px 4px">${escapeHtml(n.label)}<br><span style="color:#8b949e">${n.type} · ${n.scope}</span></div>`)
   .linkColor((l) => l.kind === "relation" ? (RELATION_COLORS[l.relationType] || "#6e7681")
                  : l.kind === "similarity" ? "#30363d" : "#21262d")
   .linkLineDash((l) => l.kind === "similarity" ? [2, 3] : null)
@@ -39,6 +40,7 @@ const Graph = ForceGraph()(el("graph"))
   });
 
 let lastIds = new Set();
+let fitted = false;
 async function load() {
   const data = await (await fetch("/api/graph")).json();
   el("empty").style.display = data.nodes.length ? "none" : "flex";
@@ -46,6 +48,11 @@ async function load() {
   for (const n of data.nodes) if (!lastIds.has(n.id)) pulses.set(n.id, now);
   lastIds = new Set(data.nodes.map((n) => n.id));
   Graph.graphData(data);
+  // Center/fit once after the first non-empty layout settles.
+  if (!fitted && data.nodes.length) {
+    fitted = true;
+    setTimeout(() => Graph.zoomToFit(500, 60), 700);
+  }
 }
 
 function showPanel(node) {

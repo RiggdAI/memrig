@@ -11,7 +11,7 @@ SQLite memory brain for AI coding assistants.
 ## Architecture
 
 - `src/index.ts` — CLI entry: routes to `init` or MCP server
-- `src/server.ts` — MCP server with 6 tools
+- `src/server.ts` — MCP server with 7 tools
 - `src/db.ts` — SQLite database management (better-sqlite3 + sqlite-vec)
 - `src/search.ts` — hybrid FTS5 + vector search with RRF
 - `src/embeddings.ts` — local embeddings via @huggingface/transformers
