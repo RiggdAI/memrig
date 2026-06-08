@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, extname } from "node:path";
+import { dirname, join, extname, sep } from "node:path";
 import { openDatabasePair } from "../db.js";
 import { buildGraph } from "./build.js";
 import { watchDbs } from "./watch.js";
@@ -53,7 +53,9 @@ export async function startGraphServer(
   const sharedPath = join(memoryDir, "shared.db");
   const personalPath = join(memoryDir, "users", `${user}.db`);
   const stopWatch = watchDbs([sharedPath, personalPath], () => {
-    for (const res of sseClients) res.write(`event: change\ndata: {}\n\n`);
+    for (const res of sseClients) {
+      try { res.write(`event: change\ndata: {}\n\n`); } catch { sseClients.delete(res); }
+    }
   });
 
   const server = createServer(async (req, res) => {
@@ -70,7 +72,9 @@ export async function startGraphServer(
       res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" });
       res.write(`event: ready\ndata: {}\n\n`);
       sseClients.add(res);
-      req.on("close", () => sseClients.delete(res));
+      const drop = () => sseClients.delete(res);
+      req.on("close", drop);
+      res.on("error", drop);
       return;
     }
 
@@ -85,17 +89,19 @@ export async function startGraphServer(
     }
 
     if (url === "/api/forget" && req.method === "POST") {
-      const body = JSON.parse((await readBody(req)) || "{}");
-      const result = executeForget(personal, shared, user, { id: body.id });
+      let body: { id?: string };
+      try { body = JSON.parse((await readBody(req)) || "{}"); }
+      catch { res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ success: false, error: "invalid JSON" })); return; }
+      const result = executeForget(personal, shared, user, { id: body.id ?? "" });
       res.writeHead(result.success ? 200 : 400, { "content-type": "application/json" });
       res.end(JSON.stringify(result));
       return;
     }
 
-    // static files
+    // static files — resolve under root and reject anything that escapes it.
     const rel = url === "/" ? "/index.html" : url;
     const filePath = join(root, rel);
-    if (!filePath.startsWith(root)) { res.writeHead(403); res.end(); return; }
+    if (filePath !== root && !filePath.startsWith(root + sep)) { res.writeHead(403); res.end(); return; }
     try {
       const buf = await readFile(filePath);
       res.writeHead(200, { "content-type": MIME[extname(filePath)] || "application/octet-stream" });
@@ -114,6 +120,7 @@ export async function startGraphServer(
   const stop = () => {
     stopWatch();
     for (const res of sseClients) { try { res.end(); } catch { /* ignore */ } }
+    sseClients.clear();
     server.close();
     personal.close();
     shared.close();

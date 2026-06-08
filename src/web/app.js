@@ -59,8 +59,9 @@ function showPanel(node) {
   fetch(`/api/node/${node.id}`).then((r) => r.json()).then((m) => {
     const panel = el("panel");
     panel.style.display = "block";
-    panel.innerHTML = `<h3>${node.type}</h3><div>${escapeHtml(m.content || node.label)}</div>
-      <div class="meta">scope: ${node.scope} · importance: ${node.importance} · tags: ${(node.tags||[]).join(", ") || "—"}</div>
+    const tags = (node.tags || []).map(escapeHtml).join(", ") || "—";
+    panel.innerHTML = `<h3>${escapeHtml(node.type)}</h3><div>${escapeHtml(m.content || node.label)}</div>
+      <div class="meta">scope: ${escapeHtml(node.scope)} · importance: ${Number(node.importance)} · tags: ${tags}</div>
       <button id="forget">Forget</button>`;
     el("forget").onclick = async () => {
       await fetch("/api/forget", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: node.id }) });

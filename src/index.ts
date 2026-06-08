@@ -20,7 +20,12 @@ async function main() {
   if (command === "graph") {
     const { startGraphServer } = await import("./graph/server.js");
     const memoryDir = resolve(process.env.MEMORY_DIR || ".memory");
-    const port = flag("port") ? Number(flag("port")) : 4319;
+    const portRaw = flag("port");
+    const port = portRaw !== undefined ? Number(portRaw) : 4319;
+    if (!Number.isInteger(port) || port < 0 || port > 65535) {
+      console.error(`Invalid --port: ${portRaw}`);
+      process.exit(1);
+    }
     const open = !args.includes("--no-open");
     const graphUser = flag("user") || user;
     const { port: actual } = await startGraphServer(memoryDir, graphUser, { port, open });

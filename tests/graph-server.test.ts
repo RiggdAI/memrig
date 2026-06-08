@@ -43,4 +43,24 @@ describe("graph server", () => {
     const g = await get(port, "/api/graph");
     expect(g.json.nodes.find((n: any) => n.id === "m1")).toBeFalsy();
   });
+
+  it("does not serve files outside the web root", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "memrig-srv3-"));
+    const { port, stop: s } = await startGraphServer(dir, "alice", { port: 0, open: false });
+    stop = s;
+    // fetch normalizes ../ client-side; combined with the server's root-boundary
+    // check, a file outside the web root must never come back 200.
+    const res = await fetch(`http://127.0.0.1:${port}/../../package.json`);
+    expect(res.status).not.toBe(200);
+  });
+
+  it("returns 400 (not a hang/crash) on a malformed /api/forget body", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "memrig-srv4-"));
+    const { port, stop: s } = await startGraphServer(dir, "alice", { port: 0, open: false });
+    stop = s;
+    const res = await fetch(`http://127.0.0.1:${port}/api/forget`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: "not json{",
+    });
+    expect(res.status).toBe(400);
+  });
 });
