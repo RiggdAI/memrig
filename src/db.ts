@@ -18,7 +18,7 @@ function getVecExtensionPath(): string | null {
   } catch {
     cachedVecPath = null;
   }
-  return cachedVecPath;
+  return cachedVecPath ?? null;
 }
 
 export function openDatabase(dbPath: string): Database.Database {
