@@ -7,6 +7,9 @@
   "bin": {
     "memrig": "dist/index.cjs"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
